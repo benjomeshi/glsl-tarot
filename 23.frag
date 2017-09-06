@@ -5,6 +5,17 @@ uniform float time;
 
 float PI = 3.14159265;
 
+// Signed Distance Fields
+float rectSDF(vec2 st, vec2 size){
+  return max(abs(st).x * size.x, abs(st).y * size.y);
+}
+
+float crossSDF(vec2 st, float s){
+  vec2 size = vec2(.25, s);
+  return min(rectSDF(st, size.xy),
+    rectSDF(st, size.yx));
+}
+
 float triSDF(vec2 uv){
   return max(abs(uv.x) * .866025 + uv.y * .5,
               -uv.y * .5);
@@ -18,6 +29,10 @@ float rhombSDF(vec2 uv){
 float circleSDF(vec2 uv){
   return length(uv);
 }
+
+//ENDSDF
+
+//STEPPERS
 
 float fill(float x, float size){
   return 1.-step(size, x);
@@ -38,15 +53,19 @@ vec2 rotate(vec2 uv, float angle){
        sin(angle), cos(angle)) * uv;
 }
 
+//ENDSTEPPERS
 
 void main(){
   vec3 color = vec3(0.);
   vec2 uv = (gl_FragCoord.xy * 2.0 - resolution) / resolution.y;
 
+  vec2 offset = vec2(.1);
   uv = rotate(uv, -PI/4.);
-  float tri = triSDF(uv);
-  float tri2 = triSDF(uv+vec2(0.,.2));
-  color += fill(tri/tri2, 0.7);
+  vec2 s = vec2(1.);
+  float size = .4;
+  float rect  = fill(rectSDF(uv+offset, s), size);
+  float rect2 = fill(rectSDF(uv-offset, s), size);
+  color += flip(rect, rect2);
 
   gl_FragColor = vec4(color, 1.);
 }
