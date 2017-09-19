@@ -21,6 +21,12 @@ float circleSDF(vec2 uv){
   return length(uv);
 }
 
+float vesicaSDF(vec2 uv, float w){
+  vec2 offset = vec2(w*.5, 0.);
+  return max(circleSDF(uv+offset),
+            circleSDF(uv-offset));
+}
+
 float raySDF(vec2 uv, int count){
   return fract(atan(uv.x, uv.y)/TAU*float(count));
 }
@@ -70,12 +76,16 @@ void main(){
   vec3 color = vec3(0.);
   vec2 uv = (gl_FragCoord.xy * 2.0 - resolution) / resolution.y;
 
-  float rays = fill(raySDF(rotate(uv, PI/5.), 16), .2);
-  float bottom = rectSDF(uv+vec2(0., .5), vec2(1., 3.6));
-  float box = rectSDF(uv, vec2(1.));
-  color += flip(fill(bottom, 1.8), rays);
-  color += fill(box, 0.2);
-  color *= 1. - stroke(box, .2, .05);
+  float rays = stroke(raySDF(rotate(uv, PI/4.), 36), .5, .2);
+  float vesica = vesicaSDF(uv, .7);
+  float eye = vesicaSDF(rotate(uv, PI/2.), .7);
+  float pupil = circleSDF(uv-vec2(0., .1));
+
+  color += rays;
+  color *= fill(vesica, .9);
+  color *= 1. - fill(eye, .67);
+  color += stroke(pupil, .3, .03) * fill(eye, .65);
+  color += stroke(eye, .65, .03);
 
   gl_FragColor = vec4(color, 1.);
 }

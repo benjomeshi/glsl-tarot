@@ -70,12 +70,14 @@ void main(){
   vec3 color = vec3(0.);
   vec2 uv = (gl_FragCoord.xy * 2.0 - resolution) / resolution.y;
 
-  float rays = fill(raySDF(rotate(uv, PI/5.), 16), .2);
-  float bottom = rectSDF(uv+vec2(0., .5), vec2(1., 3.6));
-  float box = rectSDF(uv, vec2(1.));
-  color += flip(fill(bottom, 1.8), rays);
-  color += fill(box, 0.2);
-  color *= 1. - stroke(box, .2, .05);
+  float rays = stroke(raySDF(rotate(uv, PI/4.), 8), .5, .2);
+  float octogon = polySDF(uv, 8);
+
+  color += rays;
+  color *= fill(octogon, .4);
+  color *= 1. - fill(octogon, .2);
+  color += stroke(octogon, .15, .03);
+  color += stroke(octogon, .5, .1);
 
   gl_FragColor = vec4(color, 1.);
 }
