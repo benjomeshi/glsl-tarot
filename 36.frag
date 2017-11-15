@@ -26,7 +26,6 @@ float vesicaSDF(vec2 uv, float w){
             circleSDF(uv-offset));
 }
 
-
 float raySDF(vec2 uv, int count){
   return fract(atan(uv.x, uv.y)/TAU*float(count));
 }
@@ -38,9 +37,15 @@ float polySDF(vec2 uv, int vertices){
   return cos(floor(.5+a/v)*v-a)*r;
 }
 
+float triSDF(vec2 uv){
+  return max(abs(uv.x) * .866025 + uv.y * .5,
+              -uv.y * .5);
+}
+
 float rhombSDF(vec2 uv){
-  return max(polySDF(uv, 3),
-    polySDF(vec2(uv.x, -uv.y), 3));
+  vec2 offset = vec2(0., .1);
+  return max(triSDF(uv-offset),
+    triSDF(vec2(uv.x, -uv.y)+offset));
 }
 
 float starSDF(vec2 uv, int V, float s){
@@ -94,12 +99,19 @@ void main(){
   vec3 color = vec3(0.);
   vec2 uv = (gl_FragCoord.xy * 2.0 - resolution) / resolution.y;
 
-  uv.x += .5;
-  uv.x = flip(uv.x, step(0., uv.y)) - .5;
-  float left = circleSDF(uv + vec2(.25, 0));
-  float right = circleSDF(uv - vec2(.25, 0));
-  color += stroke(left, .4, .1);
-  color = bridge(color, right, .4, .1);
+  float rhomb = fill(rhombSDF((uv.xy - vec2(0., .7))), .03);
+  float rhomb2 = fill(rhombSDF((uv.xy + vec2(0., .9))), .03);
+  uv.y += .5;
+  uv.y = flip(uv.y, step(0., uv.x)) - .5;
+  vec2 rot_uv = rotate(uv, PI/4.);
+  float rect1 = rectSDF(rot_uv + vec2(.1), vec2(1.));
+  float rect2 = rectSDF(rot_uv - vec2(.1), vec2(1.));
+
+  color += stroke(rect1, .3, .1);
+  color = bridge(color, rect2, .3, .1);
+  color += rhomb;
+  color += rhomb2;
+
 
   gl_FragColor = vec4(color, 1.);
 }
